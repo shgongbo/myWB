@@ -1,0 +1,13 @@
+需要用到的文件
+1.daili_zhandaye，这个是用来提供代理ip的
+2.g_weibo/try_flask,这个是用来做请求转发的
+3.1_User_crawler;这个是用来爬取新的id的，一般用不上
+4.2_seperate_user;用来把id进行分类，把没用的踢出去
+5.3_Find_choujiang:需要输入时间戳，然后可以找到所有有价值的url
+6.4_trans_mongo_useful_links_to_txt;把新增加的有价值的url复制到txt上面去，并把这些被复制了的url打上tag
+7.5_deal_with_useful_links;把存于txt中的url拿来进行处理
+
+
+一些辅助程序：
+1.6_display_all_mongodb_info;展示mongodb数据库中各种类型数据的数量
+2.7_fa_wenzi_tupian;帮助自动发文字和图片微博的工具
