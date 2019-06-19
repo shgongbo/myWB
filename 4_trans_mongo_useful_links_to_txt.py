@@ -1,6 +1,10 @@
 
 import pymongo
-import config
+import socket
+if socket.gethostname() == "ISZ4DI1Z6MV6Z6K":
+    import config
+else:
+    import product_config as config
 
 import os
 

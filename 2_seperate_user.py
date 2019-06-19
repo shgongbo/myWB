@@ -33,7 +33,7 @@ class SeperateUsers(object):
             "Accept-Language": "zh-CN,zh;q=0.9",
             "Cache-Control": "max-age=0",
             "Connection": "keep-alive",
-            "Cookie": "SINAGLOBAL=1971032401731.4163.1551954096720; un=15110248779; YF-V5-G0=44cd1a20bfa82176cbec01176361dd13; Ugrow-G0=9ec894e3c5cc0435786b4ee8ec8a55cc; login_sid_t=0b602882abb47dbd142e8c07ef97ec9e; cross_origin_proto=SSL; _s_tentry=passport.weibo.com; Apache=5877733797022.269.1560558763856; ULV=1560558763863:1:1:1:5877733797022.269.1560558763856:; wb_view_log=1920*10801; SCF=AkxnN3UOg2_gI0lQpJs3Ce5OGPpjj6UqYzvn1zDxH3UwmLjFlPWfDk8nYDYifAlglTAHm8RER707cuzqjsbBd-0.; SUHB=0Jvg4uOsUahMEM; wb_view_log_5435529966=1920*10801; webim_unReadCount=%7B%22time%22%3A1560576572438%2C%22dm_pub_total%22%3A0%2C%22chat_group_pc%22%3A0%2C%22allcountNum%22%3A3%2C%22msgbox%22%3A0%7D; SUBP=0033WrSXqPxfM72wWs9jqgMF55529P9D9WhQlbikHdp9PNYWkFUk2aa35JpVF02feK27eoBRS0M4; SUB=_2AkMqWA0JdcPxrAZVm_0QzmLraotH-jyZjWT_An7uJhMyAxgv7lAmqSVutBF-XFtO3mZ2fNeexd3DEju6sYCRx46M; WBStorage=6b696629409558bc|undefined; UOR=,,login.sina.com.cn; YF-Page-G0=e57fcdc279d2f9295059776dec6d0214|1560576577|1560576571",
+            "Cookie": "SINAGLOBAL=1971032401731.4163.1551954096720; YF-V5-G0=451b3eb7a5a4008f8b81de1fcc8cf90e; _s_tentry=www.baidu.com; Apache=3952666247955.6763.1560739195126; ULV=1560739195154:1:1:1:3952666247955.6763.1560739195126:; Ugrow-G0=6fd5dedc9d0f894fec342d051b79679e; login_sid_t=f83563108bc78812b2b28c426639a114; cross_origin_proto=SSL; appkey=; WBtopGlobal_register_version=3cccf158e973a877; SUB=_2AkMqVMMVf8NxqwJRmP0Wy2ziaot0yQzEieKcCDLOJRMxHRl-yT83qlMItRB6AdTt-h8itjHk_0AHWvexMpMSaBWc-BpL; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9WW0DbA9b.HGvbzI4nFn5E_a; WBStorage=6b696629409558bc|undefined; wb_view_log=1920*10801",
             "Host": "weibo.com",
             "Upgrade-Insecure-Requests": "1",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.90 Safari/537.36"
@@ -116,6 +116,15 @@ class SeperateUsers(object):
             return
 
         page = page["text"]
+        page_is_useless_pattern = re.compile(r'>微博新鲜事<')
+        try:
+            page_is_useless = page_is_useless_pattern.findall(page)[0]
+        except:
+            pass
+        else:
+            self.base_mongo.delete_one({"id":user["id"]})
+            self.sem.release()
+            return
         follows_num_pattern = re.compile(r'(她|他|它)的粉丝\((\d+?)\)')
         try:
             # print(page)

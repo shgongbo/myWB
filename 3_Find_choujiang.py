@@ -6,7 +6,11 @@
 import requests
 import re
 import pymongo
-import config
+import socket
+if socket.gethostname() == "ISZ4DI1Z6MV6Z6K":
+    import config
+else:
+    import product_config as config
 import time
 import math
 import tools
@@ -18,7 +22,7 @@ PER_ID_NUM = 2000
 
 
 class FindChoujiang(object):
-    def __init__(self, standard_time):
+    def __init__(self, standard_time, days):
         self.seperate_list = [0, 100, 200, 400, 600, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
                               15000, 20000, 30000, 50000, 100000, 200000, 500000, 1000000, 1000000000]
         self.TOTAL = 0
@@ -36,13 +40,14 @@ class FindChoujiang(object):
         timeArray = time.strptime(standard_time, "%Y-%m-%d %H:%M:%S")
         timeStamp = int(time.mktime(timeArray))
         self.tag = timeStamp * 1000
+        self.end_tag = self.tag + 3600 * 24 * 1000 * int(days)
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
             # "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "zh-CN,zh;q=0.9",
             "Cache-Control": "max-age=0",
             "Connection": "keep-alive",
-            "Cookie": "SINAGLOBAL=1971032401731.4163.1551954096720; un=15110248779; login_sid_t=08427fb0fafd381ee7671d7b96f4112e; cross_origin_proto=SSL; Ugrow-G0=140ad66ad7317901fc818d7fd7743564; _s_tentry=www.baidu.com; wb_view_log=1920*10801; YF-V5-G0=27518b2dd3c605fe277ffc0b4f0575b3; Apache=4050300198651.866.1560477141158; ULV=1560477141176:3:3:3:4050300198651.866.1560477141158:1560432380350; WBtopGlobal_register_version=3cccf158e973a877; wb_view_log_5435529966=1920*10801; SCF=AkxnN3UOg2_gI0lQpJs3Ce5OGPpjj6UqYzvn1zDxH3UwqNJeNeADGEJ-JS-0JlJpNj9KhOWpuClSoZvi-e95ov8.; SUHB=0QS5ijcMz_ysls; SUBP=0033WrSXqPxfM72wWs9jqgMF55529P9D9WhQlbikHdp9PNYWkFUk2aa35JpVF02feK27eoBRS0M4; SUB=_2AkMqX_VidcPxrAZVm_0QzmLraotH-jyZipyUAn7uJhMyAxgv7kcgqSVutBF-XMNqKvyyp4qTACp_skCpVCEXPE7d; UOR=,,login.sina.com.cn; webim_unReadCount=%7B%22time%22%3A1560511036531%2C%22dm_pub_total%22%3A0%2C%22chat_group_pc%22%3A0%2C%22allcountNum%22%3A0%2C%22msgbox%22%3A0%7D; YF-Page-G0=aac25801fada32565f5c5e59c7bd227b|1560511878|1560511807",
+            "Cookie": "SUB=_2AkMqXsoLdcPxrAZVm_0QzmLraotH-jyZi6P9An7uJhMyAxgv7nBXqSVutBF-XFJVO0gHZ69gfDqyu-jJLhcZggAo;",
             "Host": "weibo.com",
             "Upgrade-Insecure-Requests": "1",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.90 Safari/537.36"
@@ -72,7 +77,7 @@ class FindChoujiang(object):
         for seperate_index in range(1, len(self.seperate_list)):
             start = self.seperate_list[seperate_index - 1]
             end = self.seperate_list[seperate_index]
-            # 这里我是觉得粉丝数量少于10000的人是不会抽奖的
+            # 这里我是觉得粉丝数量少于5000的人是不会抽奖的
             if start < 5000:
                 continue
             mongo_db = self.get_mongo("%s_%s" % (start, end))
@@ -93,7 +98,7 @@ class FindChoujiang(object):
         if content in "转发微博":
             return False
 
-        if "带" in content and "话题" in content:
+        if  "带话题" in content:
             return True
 
         # <i class=\"W_ficon ficon_cd_link\">O<\/i>抽奖详情<\/a>
@@ -105,7 +110,7 @@ class FindChoujiang(object):
         else:
                 return True
 
-        if "@微博抽奖平台" in content:
+        if "@微博抽奖平台" in content and ("恭喜" not in content) and ("祝贺" not in content):
             return True
         list_1 = ["转发","点赞",'评论']
         list_2 = ["抽","揪"]
@@ -155,7 +160,7 @@ class FindChoujiang(object):
         #             return True
         # if "赠" in content:
         #     return True
-        if "带" in content and "话题" in content:
+        if "带话题" in content:
             return True
         # <i class=\"W_ficon ficon_cd_link\">O<\/i>抽奖详情<\/a>
         pattern_one = re.compile(r'<i class=\\"W_ficon ficon_cd_link\\">O<\\/i>抽奖详情<\\/a>')
@@ -228,7 +233,7 @@ class FindChoujiang(object):
     def parse_all_urls(self):
         try_times = 0
         while True:
-            if try_times > 10:
+            if try_times > 1:
                 break
             try_times += 1
             all_urls = self.all_links_mongo.find({"tag": 0})
@@ -279,7 +284,7 @@ class FindChoujiang(object):
             all_links = links_pattern.findall(page)
 
             for link in all_links:
-                if str(link[0]) in str(link[2]) and int(link[4]) >= self.tag:
+                if str(link[0]) in str(link[2]) and int(link[4]) >= self.tag and int(link[4]) < self.end_tag:
                     url_link = "https://weibo.com/%s/%s?from=page_%s_profile&wvr=6&mod=weibotime&type=comment" % (
                         link[0], link[1], link[2])
                     self.all_links_mongo.insert_one({"url": url_link, "tag": 0})
@@ -300,7 +305,7 @@ class FindChoujiang(object):
             useful_ids_count = self.useful_mongo.count_documents({"tag": {"$ne": self.tag}})
             if useful_ids_count < 1:
                 break
-            if try_times > 20:
+            if try_times > 1:
                 break
             try_times += 1
             tsk = []
@@ -347,7 +352,11 @@ if __name__ == "__main__":
         shijian = sys.argv[2]
     except:
         shijian = "00:00:00"
-    FindObject = FindChoujiang("%s %s" % (riqi, shijian))
+    try:
+        days = sys.argv[3]
+    except:
+        days = "1"
+    FindObject = FindChoujiang("%s %s" % (riqi, shijian), days)
     # FindObject = FindChoujiang("2019-06-10 00:00:00")
     FindObject.find_and_save_useful_ids()
     # FindObject.parse_all_useful_ids()

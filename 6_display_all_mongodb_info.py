@@ -31,3 +31,8 @@ print("now total is %s " % total)
 print("more than 10000 is %s" % more_than_10000)
 print("more than 5000 is %s" % more_than_5000)
 print("now base has %s" % (get_mongo("base_users").count_documents({})))
+print("all links number is %s" % (get_mongo("all_links_mongo").count_documents({})))
+print("all not used links number is %s" % (get_mongo("all_links_mongo").count_documents({"tag":0})))
+print("useful links number is %s" % (get_mongo("useful_links_mongo").count_documents({})))
+print("useful not used links number is %s" % (get_mongo("useful_links_mongo").count_documents({"tag":0})))
+
